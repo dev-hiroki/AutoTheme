@@ -2,8 +2,10 @@
 
 #include <iostream>
 #include <chrono>
+#include <filesystem>
 
 #include <Windows.h>
+#include <ShlObj.h>
 
 #include <winrt/windows.ui.notifications.h>
 #include <winrt/windows.data.xml.dom.h>

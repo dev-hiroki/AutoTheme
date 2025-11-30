@@ -77,9 +77,38 @@ void SendToastNotification(std::wstring App, std::wstring Title, std::wstring Me
     Notifi.Show(Toast);
 }
 
+std::string ToStr(std::wstring Str)
+{
+    int Size = WideCharToMultiByte(CP_UTF8, 0, Str.c_str(), -1, nullptr, 0, nullptr, nullptr);
+    if (Size == 0)
+    {
+        return {};
+    }
+    std::string Out(Size - 1, '\0');
+
+    WideCharToMultiByte(CP_UTF8, 0, Str.c_str(), -1, Out.data(), Size, nullptr, nullptr);
+
+    return Out;
+}
+
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nShowCmd)
 {
+    std::string Path = "";
     {
+        PWSTR PathW = nullptr;
+        HRESULT Result = SHGetKnownFolderPath(FOLDERID_RoamingAppData, 0, NULL, &PathW);
+        if (SUCCEEDED(Result))
+        {
+            std::wstring  WPath(PathW);
+            CoTaskMemFree(PathW);
+            Path = ToStr(WPath) + "\\AutoTheme";
+        }
+    }
+
+    if (!Path.empty())
+    {
+        std::filesystem::create_directory(Path);
+
 #ifdef DEBUG
         AllocConsole();
 
@@ -91,7 +120,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 
         spdlog::set_default_logger(Logger);
 #else
-        auto FileSink = std::make_shared<spdlog::sinks::basic_file_sink_mt>("Log.txt", true);
+        auto FileSink = std::make_shared<spdlog::sinks::basic_file_sink_mt>(Path + "\\Log.txt", true);
 
         std::vector<spdlog::sink_ptr> Sinks = { FileSink };
         auto Logger = std::make_shared<spdlog::logger>("", Sinks.begin(), Sinks.end());
