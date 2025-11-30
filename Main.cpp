@@ -1,3 +1,5 @@
+#include <nlohmann/json_fwd.hpp>
+
 #include "Resources/Resource.h"
 
 
@@ -105,6 +107,8 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
         }
     }
 
+    int LightStart = 7;
+    int LightEnd = 17;
     if (!Path.empty())
     {
         std::filesystem::create_directory(Path);
@@ -128,6 +132,42 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
         spdlog::set_default_logger(Logger);
 #endif
         spdlog::flush_on(spdlog::level::info);
+
+        if (std::filesystem::exists(Path + "\\Config.json"))
+        {
+            try
+            {
+                std::ifstream File(Path + "\\Config.json");
+                nlohmann::json Config = nlohmann::json::parse(File);
+
+                LightStart = Config["LightStart"];
+                LightEnd = Config["LightEnd"];
+
+                spdlog::info("Config loaded:");
+                spdlog::info("Light Start: {}, Light End: {}", LightStart, LightEnd);
+            }
+            catch (...)
+            {
+                spdlog::error("Failed Parse Config");
+            }
+        }
+        else
+        {
+            std::ofstream File(Path + "\\Config.json");
+
+            if (File.is_open())
+            {
+                nlohmann::json Config;
+                Config["LightStart"] = LightStart;
+                Config["LightEnd"] = LightEnd;
+
+                File << Config.dump(4);
+            }
+            else
+            {
+                spdlog::error("Failed Create Config");
+            }
+        }
     }
 
     winrt::init_apartment();
@@ -155,13 +195,13 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 
             localtime_s(&LocalTime, &T);
 
-            if (LocalTime.tm_hour > 22 || LocalTime.tm_hour < 7)
-            {
-                UseLight = false;
-            }
-            else if (LocalTime.tm_hour > 7 && LocalTime.tm_hour < 22)
+            if (LocalTime.tm_hour > LightStart && LocalTime.tm_hour < LightEnd)
             {
                 UseLight = true;
+            }
+            else
+            {
+                UseLight = false;
             }
         }
 

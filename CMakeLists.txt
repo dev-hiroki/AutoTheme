@@ -6,7 +6,16 @@ set(CMAKE_WIN32_EXECUTABLE TRUE)
 
 include("CPM.cmake")
 
-CPMAddPackage("gh:gabime/spdlog@1.16.0")
+CPMAddPackage(
+        NAME spdlog
+        GITHUB_REPOSITORY gabime/spdlog
+        GIT_TAG v1.16.0
+)
+CPMAddPackage(
+        NAME json
+        GITHUB_REPOSITORY nlohmann/json
+        GIT_TAG master
+)
 
 if (CMAKE_BUILD_TYPE STREQUAL "Debug")
     remove_definitions(-D_DEBUG)
@@ -14,5 +23,5 @@ if (CMAKE_BUILD_TYPE STREQUAL "Debug")
 endif()
 
 add_executable(${PROJECT_NAME} PCH.cpp Main.cpp Resources/Resource.rc)
-target_link_libraries(${PROJECT_NAME} PRIVATE WindowsApp.lib spdlog)
+target_link_libraries(${PROJECT_NAME} PRIVATE WindowsApp.lib spdlog nlohmann_json)
 target_precompile_headers(${PROJECT_NAME} PRIVATE "PCH.h")
